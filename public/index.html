@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybertools - Website Legitimacy Checker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .main-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 1.1rem;
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            background: #f9fafb;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .check-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .check-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .check-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            color: white;
+            font-weight: 600;
+        }
+
+        .result-header.legitimate {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .result-header.suspicious {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .result-header.fake {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .result-header h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .score {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .result-section {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid #667eea;
+        }
+
+        .result-section h3 {
+            color: #1f2937;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .info-item {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .info-item strong {
+            color: #374151;
+            display: inline-block;
+            min-width: 120px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+
+        .status-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .factors-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .factors-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .factors-list li:before {
+            content: "•";
+            color: #667eea;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border: 1px solid #fecaca;
+        }
+
+        .social-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .social-link {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .recommendations {
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .recommendations h4 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+
+        .recommendations ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .recommendations li {
+            padding: 5px 0;
+            color: #1e40af;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .recommendations li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #3b82f6;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .main-card {
+                padding: 25px;
+            }
+
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ Cybertools</h1>
+            <p>Advanced Website Legitimacy Checker</p>
+        </div>
+
+        <div class="main-card">
+            <form id="legitimacyForm">
+                <div class="form-group">
+                    <label for="urlInput">Enter Website URL to Check:</label>
+                    <input 
+                        type="text" 
+                        id="urlInput" 
+                        class="url-input" 
+                        placeholder="https://example.com or example.com"
+                        required
+                    >
+                </div>
+                <button type="submit" class="check-btn" id="checkBtn">
+                    🔍 Check Website Legitimacy
+                </button>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing website legitimacy...</p>
+                <p style="font-size: 0.9rem; opacity: 0.7; margin-top: 10px;">
+                    This may take 30-60 seconds as we perform comprehensive checks
+                </p>
+            </div>
+
+            <div class="error-message" id="errorMessage" style="display: none;"></div>
+        </div>
+
+        <div class="results" id="results">
+            <!-- Results will be populated here -->
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('legitimacyForm');
+        const urlInput = document.getElementById('urlInput');
+        const checkBtn = document.getElementById('checkBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const errorMessage = document.getElementById('errorMessage');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const url = urlInput.value.trim();
+            if (!url) return;
+
+            // Show loading state
+            loading.classList.add('show');
+            results.classList.remove('show');
+            errorMessage.style.display = 'none';
+            checkBtn.disabled = true;
+            checkBtn.textContent = '🔍 Checking...';
+
+            try {
+                const response = await fetch('/api/legitimacy/check', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to check website legitimacy');
+                }
+
+                displayResults(data);
+
+            } catch (error) {
+                console.error('Error:', error);
+                errorMessage.textContent = `Error: ${error.message}`;
+                errorMessage.style.display = 'block';
+            } finally {
+                loading.classList.remove('show');
+                checkBtn.disabled = false;
+                checkBtn.textContent = '🔍 Check Website Legitimacy';
+            }
+        });
+
+        function displayResults(data) {
+            const statusClass = data.legitimacyStatus.includes('LEGITIMATE') ? 'legitimate' :
+                              data.legitimacyStatus.includes('SUSPICIOUS') ? 'suspicious' : 'fake';
+
+            results.innerHTML = `
+                <div class="main-card">
+                    <div class="result-header ${statusClass}">
+                        <h2>${data.legitimacyStatus}</h2>
+                        <div class="score">${data.legitimacyScore}/100</div>
+                        <p>Legitimacy Score for ${data.url}</p>
+                    </div>
+
+                    <div class="result-grid">
+                        <div class="result-section">
+                            <h3>🌐 Domain Information</h3>
+                            <div class="info-item">
+                                <strong>Domain:</strong> ${data.whois.domain || 'Unknown'}
+                            </div>
+                            <div class="info-item">
+                                <strong>Registration:</strong> ${data.whois.registrationDate || 'Unknown'}
+                                <span class="status-badge ${data.whois.ageInYears >= 3 ? 'status-success' : 'status-warning'}">
+                                    ${data.whois.status || 'Unknown'}
+                                </span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Age:</strong> ${data.whois.ageInYears ? `${data.whois.ageInYears} years` : 'Unknown'}
+                            </div>
+                        </div>
+
+                        <div class="result-section">
+                            <h3>🎯 Website Purpose</h3>
+                            <div class="info-item">
+                                <p>${data.purpose.purpose || 'Unable to determine purpose'}</p>
+                                <small style="color: #6b7280; margin-top: 10px; display: block;">
+                                    Analysis Method: ${data.purpose.analysisMethod || 'Unknown'}
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="result-section">
+                            <h3>📞 Contact Information</h3>
+                            <div class="info-item">
+                                <strong>Emails Found:</strong> ${data.socialMedia.emails.length}
+                                ${data.socialMedia.emails.length > 0 ? 
+                                    `<br><small>${data.socialMedia.emails.join(', ')}</small>` : ''}
+                            </div>
+                            <div class="info-item">
+                                <strong>Phone Numbers:</strong> ${data.socialMedia.phoneNumbers.length}
+                                ${data.socialMedia.phoneNumbers.length > 0 ? 
+                                    `<br><small>${data.socialMedia.phoneNumbers.join(', ')}</small>` : ''}
+                            </div>
+                            <div class="info-item">
+                                <strong>Social Media:</strong> ${data.socialMedia.socialLinks.length} links found
+                                ${data.socialMedia.socialLinks.length > 0 ? 
+                                    `<div class="social-links">
+                                        ${data.socialMedia.socialLinks.map(link => 
+                                            `<a href="${link.url}" target="_blank" class="social-link">${link.platform}</a>`
+                                        ).join('')}
+                                    </div>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="result-section">
+                            <h3>📧 Email Verification</h3>
+                            ${data.emailVerifications.length > 0 ? 
+                                data.emailVerifications.map(ev => `
+                                    <div class="info-item">
+                                        <strong>${ev.email}:</strong>
+                                        <span class="status-badge ${ev.verification.valid ? 'status-success' : 'status-error'}">
+                                            ${ev.verification.valid ? 'Valid' : 'Invalid'}
+                                        </span>
+                                        <br><small>${ev.verification.reason || 'No details'}</small>
+                                    </div>
+                                `).join('') : 
+                                '<div class="info-item">No emails to verify</div>'
+                            }
+                        </div>
+
+                        <div class="result-section">
+                            <h3>📱 Phone Verification</h3>
+                            ${data.phoneVerifications.length > 0 ? 
+                                data.phoneVerifications.map(pv => `
+                                    <div class="info-item">
+                                        <strong>${pv.phone}:</strong>
+                                        <span class="status-badge ${pv.verification.valid ? 'status-success' : 'status-error'}">
+                                            ${pv.verification.valid ? 'Valid' : 'Invalid'}
+                                        </span>
+                                        <br><small>${pv.verification.reason || 'No details'}</small>
+                                    </div>
+                                `).join('') : 
+                                '<div class="info-item">No phone numbers to verify</div>'
+                            }
+                        </div>
+
+                        <div class="result-section">
+                            <h3>🔍 SEO & Web Presence</h3>
+                            <div class="info-item">
+                                <strong>Search Presence:</strong>
+                                <span class="status-badge ${data.seo.appearsInResults ? 'status-success' : 'status-warning'}">
+                                    ${data.seo.appearsInResults ? 'Found' : 'Limited'}
+                                </span>
+                            </div>
+                            ${data.seo.seoScore ? `
+                                <div class="info-item">
+                                    <strong>SEO Score:</strong> ${data.seo.seoScore}/100
+                                    <span class="status-badge ${data.seo.seoScore >= 70 ? 'status-success' : data.seo.seoScore >= 40 ? 'status-warning' : 'status-error'}">
+                                        ${data.seo.seoHealth}
+                                    </span>
+                                </div>
+                            ` : ''}
+                            ${data.seo.recommendations && data.seo.recommendations.length > 0 ? `
+                                <div class="recommendations">
+                                    <h4>SEO Recommendations:</h4>
+                                    <ul>
+                                        ${data.seo.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <div class="result-section" style="margin-top: 25px;">
+                        <h3>📊 Analysis Factors</h3>
+                        <ul class="factors-list">
+                            ${data.factors.map(factor => `<li>${factor}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 12px;">
+                        <small style="color: #6b7280;">
+                            Analysis completed on ${new Date(data.timestamp).toLocaleString()}
+                            <br>This tool provides automated analysis and should be used as a guide alongside manual verification.
+                        </small>
+                    </div>
+                </div>
+            `;
+
+            results.classList.add('show');
+            results.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
